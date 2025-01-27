@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="./chat.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    #messages {
+    height: 300px;
+    overflow-y: auto;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.message strong {
+    font-weight: bold;
+    color: #00698f;
+}
+
+.message button {
+    float: right;
+    margin-top: -5px;
+}
+
+
+
+
+</style>
+<body>
+   <!-- Another -->
+   <div class="w3-container w3-card-4 w3-padding">
+    <h2 class="w3-center">Chat App</h2>
+    <div id="login-container" style="display:block;">
+        <h3 class="w3-center">Login</h3>
+        <form id="login-form" class="w3-center">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" class="w3-input w3-border">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" class="w3-input w3-border">
+            <button id="login-btn" class="w3-button w3-green">Login</button>
+        </form>
+        <button id="signup-btn" class="w3-button w3-green">Signup</button>
+    </div>
+    <div id="chat-container" style="display:none;">
+        <h3 class="w3-center">Chat</h3>
+        <div id="messages" class="w3-container w3-card-4 w3-padding"></div>
+        <input type="text" id="message-input" placeholder="Type a message..." class="w3-input w3-border">
+        <button id="send-btn" class="w3-button w3-green">Send</button>
+        <button id="logout-btn" class="w3-button w3-red">Logout</button>
+    </div>
+</div>
+
+<!-- Another -->
+</body>
+<script>
+const loginContainer = document.getElementById('login-container');
+const chatContainer = document.getElementById('chat-container');
+const loginForm = document.getElementById('login-form');
+const signupBtn = document.getElementById('signup-btn');
+const loginBtn = document.getElementById('login-btn');
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+const messagesDiv = document.getElementById('messages');
+const logoutBtn = document.getElementById('logout-btn');
+
+// Initialize variables
+let currentUser = null;
+let messages = [];
+
+// Check for stored user data
+if (localStorage.getItem('users')) {
+    const storedUsers = JSON.parse(localStorage.getItem('users'));
+    if (storedUsers.length > 0) {
+        // If there are stored users, set the first one as the current user
+        currentUser = storedUsers[0];
+        showChatContainer();
+    }
+}
+
+// Login form submission handler
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    if (username && password) {
+        // Check if the user exists in local storage
+        if (localStorage.getItem('users')) {
+            const storedUsers = JSON.parse(localStorage.getItem('users'));
+            const user = storedUsers.find((user) => user.username === username && user.password === password);
+            if (user) {
+                currentUser = user;
+                showChatContainer();
+            } else {
+                alert('Invalid username or password');
+            }
+        } else {
+            alert('No users found');
+        }
+    } else {
+        alert('Please fill in both username and password');
+    }
+});
+// Signup button click handler
+signupBtn.addEventListener('click', () => {
+    const username = prompt('Enter a username:');
+    const password = prompt('Enter a password:');
+    if (username && password) {
+        // Check if the user already exists in local storage
+        if (localStorage.getItem('users')) {
+            const storedUsers = JSON.parse(localStorage.getItem('users'));
+            const user = storedUsers.find((user) => user.username === username);
+            if (user) {
+                alert('Username already taken');
+            } else {
+                storedUsers.push({ username, password });
+                localStorage.setItem('users', JSON.stringify(storedUsers));
+                currentUser = { username, password };
+                showChatContainer();
+            }
+        } else {
+            const users = [{ username, password }];
+            localStorage.setItem('users', JSON.stringify(users));
+            currentUser = { username, password };
+            showChatContainer();
+        }
+    } else {
+        alert('Please fill in both username and password');
+    }
+});
+
+// Send button click handler
+sendBtn.addEventListener('click', () => {
+    const message = messageInput.value.trim();
+    if (message) {
+        messages.push({ username: currentUser.username, message });
+        // messages.push(newMessage);
+        localStorage.setItem('messages', JSON.stringify(messages));
+
+        displayMessages();
+        messageInput.value = '';
+    } else {
+        alert('Please enter a message');
+    }
+});
+
+// Logout button click handler
+logoutBtn.addEventListener('click', () => {
+    currentUser = null;
+    hideChatContainer();
+});
+
+// Function to display messages
+function displayMessages() {
+    messagesDiv.innerHTML = '';
+    messages.forEach((message, index) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.innerHTML = `<strong>${message.username}:</strong> ${message.message}`;
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => {
+            messages.splice(index, 1);
+            localStorage.setItem('messages', JSON.stringify(messages));
+            displayMessages();
+        });
+        messageDiv.appendChild(deleteButton);
+        messagesDiv.appendChild(messageDiv);
+    });
+}
+
+// Function to show chat container
+function showChatContainer() {
+    loginContainer.style.display = 'none';
+    chatContainer.style.display = 'block';
+}
+
+// Function to hide chat container
+function hideChatContainer() {
+    loginContainer.style.display = 'block';
+    chatContainer.style.display = 'none';
+}
+
+// Initialize messages array from local storage
+if (localStorage.getItem('messages')) {
+    messages = JSON.parse(localStorage.getItem('messages'));
+} else {
+    messages = [];
+}
+
+// Display messages
+displayMessages();
+
+</script>
+
+</body>
+</html>
